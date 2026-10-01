@@ -1,7 +1,12 @@
 import { EventEmitter } from 'node:events';
 import type { Response } from 'express';
 
-export type SseEventType = 'asset_processed' | 'window_changed' | 'reminder_created' | 'reminder_updated';
+export type SseEventType =
+  | 'asset_processed'
+  | 'window_changed'
+  | 'reminder_created'
+  | 'reminder_updated'
+  | 'route_resequenced';
 
 export interface SseEvent {
   type: SseEventType;

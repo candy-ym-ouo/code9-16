@@ -14,6 +14,8 @@ import AlbumDetail from './routes/AlbumDetail.js';
 import Search from './routes/Search.js';
 import Places from './routes/Places.js';
 import Plans from './routes/Plans.js';
+import RoutesPage from './routes/Routes.js';
+import RouteDetail from './routes/RouteDetail.js';
 import Settings from './routes/Settings.js';
 import ShareView from './routes/ShareView.js';
 
@@ -49,6 +51,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       ),
     },
     { key: '/albums', label: <Link to="/albums">画册</Link> },
+    { key: '/routes', label: <Link to="/routes">路线</Link> },
     { key: '/places', label: <Link to="/places">地点</Link> },
     { key: '/settings', label: <Link to="/settings">设置</Link> },
   ];
@@ -108,6 +111,8 @@ export default function App() {
               <Route path="/inspirations/:id" element={<InspirationDetail />} />
               <Route path="/search" element={<Search />} />
               <Route path="/plans" element={<Plans />} />
+              <Route path="/routes" element={<RoutesPage />} />
+              <Route path="/routes/:id" element={<RouteDetail />} />
               <Route path="/albums" element={<Albums />} />
               <Route path="/albums/:id" element={<AlbumDetail />} />
               <Route path="/places" element={<Places />} />

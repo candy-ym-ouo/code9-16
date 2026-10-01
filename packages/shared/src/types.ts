@@ -10,6 +10,9 @@ import type {
   PlanStatus,
   ReminderActionKind,
   ReminderStatus,
+  RouteConflictKind,
+  RouteStatus,
+  RouteTrigger,
   TagDomain,
   TagSource,
   TimeAnchor,
@@ -234,4 +237,107 @@ export interface AuthUser {
   displayName: string;
   libraryId: string;
   role: 'owner' | 'member';
+}
+
+// ---------------------------------------------------------------- 取景路线
+
+export interface RouteStopWindowDto {
+  id: string | null;
+  startAt: string;
+  endAt: string;
+  verdict: WindowVerdict;
+  weatherDegraded: boolean;
+  computedAt: string | null;
+}
+
+export interface RouteStopDto {
+  id: string;
+  planId: string;
+  inspirationId: string;
+  inspirationTitle: string;
+  seq: number;
+  arriveAt: string | null;
+  departAt: string | null;
+  dwellMin: number;
+  commuteFromPrevMin: number | null;
+  commuteSource: 'plan' | 'estimate' | 'manual' | null;
+  confirmedAt: string | null;
+  /** 确认时基于的路线版本：小于当前版本说明是晚到确认（不会被应用） */
+  confirmedVersion: number | null;
+  window: RouteStopWindowDto | null;
+}
+
+/**
+ * 冲突来源：每条时段冲突都必须能回溯到具体的窗口 / 通勤段 / 客户端操作。
+ * 坐标不出现在这里（路线为 owner 私有，但距离只保留一位小数）。
+ */
+export type RouteConflictSource =
+  | {
+      type: 'window';
+      stopId: string;
+      inspirationTitle: string;
+      windowId: string | null;
+      startAt: string;
+      endAt: string;
+      verdict: WindowVerdict;
+      computedAt: string | null;
+      reasons: WindowReasonDto[];
+    }
+  | {
+      type: 'commute';
+      fromStopId: string;
+      toStopId: string;
+      distanceKm: number;
+      minutes: number;
+      source: 'plan' | 'estimate' | 'manual';
+    }
+  | {
+      type: 'client_op';
+      clientOpId: string | null;
+      stopId: string;
+      baseVersion: number;
+      currentVersion: number;
+      attemptedAt: string;
+    };
+
+export interface RouteConflictDto {
+  id: string;
+  routeId: string;
+  kind: RouteConflictKind;
+  status: 'open' | 'resolved';
+  summary: string;
+  sources: RouteConflictSource[];
+  resolution: string | null;
+  rationale: string | null;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+}
+
+export interface RouteRevisionDto {
+  version: number;
+  trigger: RouteTrigger;
+  reasons: string[];
+  /** 重排来源快照：用到的窗口判定、通勤段、被放弃的候选顺序 */
+  inputs: {
+    generatedAt: string;
+    windows: { stopId: string; windowId: string | null; startAt: string; endAt: string; verdict: WindowVerdict; computedAt: string | null }[];
+    legs: { fromStopId: string | null; toStopId: string; minutes: number; source: string; distanceKm: number | null }[];
+    alternatives: { order: string[]; conflicts: number; missedMin: number; commuteMin: number; note: string }[];
+  } | null;
+  createdBy: string | null;
+  createdAt: string;
+}
+
+export interface RouteDto {
+  id: string;
+  title: string;
+  date: string;
+  version: number;
+  status: RouteStatus;
+  originText: string | null;
+  stops: RouteStopDto[];
+  openConflicts: number;
+  createdAt: string;
+  updatedAt: string;
 }

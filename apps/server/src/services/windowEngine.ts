@@ -27,6 +27,7 @@ import {
   summarizeEpisode,
   type EpisodeWeather,
 } from './weather.js';
+import { handleWindowVerdictChange } from './routes.js';
 
 export interface TimingRow {
   id: string;
@@ -520,6 +521,7 @@ export async function computeWindowsForInspiration(
 
   const ts = nowIso();
   const dtos: ReproWindowDto[] = [];
+  const verdictChanges: { date: string; from: string; to: string }[] = [];
 
   const persist = db.transaction(() => {
     for (const r of results) {
@@ -573,6 +575,7 @@ export async function computeWindowsForInspiration(
       }
 
       if (prior && prior.verdict !== r.verdict) {
+        verdictChanges.push({ date: r.date, from: prior.verdict, to: r.verdict });
         emitEvent({
           type: 'window_changed',
           libraryId: inspiration.library_id,
@@ -598,6 +601,11 @@ export async function computeWindowsForInspiration(
     }
   });
   persist();
+
+  // 判定变化（气象/天文重算）→ 通知路线服务重排受影响路线（来源会写进路线版本记录）
+  if (verdictChanges.length > 0) {
+    handleWindowVerdictChange(inspirationId, verdictChanges);
+  }
 
   return dtos;
 }

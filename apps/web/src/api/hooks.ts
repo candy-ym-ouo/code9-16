@@ -6,6 +6,9 @@ import type {
   PlanDto,
   ReminderDto,
   ReproWindowDto,
+  RouteConflictDto,
+  RouteDto,
+  RouteRevisionDto,
   SearchResult,
   SpotDto,
   TagDto,
@@ -325,5 +328,81 @@ export function useRevokeShare() {
   return useMutation({
     mutationFn: (id: string) => post<unknown>(`/share-links/${id}/revoke`, {}),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['shareLinks'] }),
+  });
+}
+
+// ------------------------------------------------------------------ 取景路线
+
+export interface RouteDetailResponse {
+  item: RouteDto;
+  conflicts: RouteConflictDto[];
+  revisions: RouteRevisionDto[];
+}
+
+export const useRoutes = () =>
+  useQuery({ queryKey: ['routes'], queryFn: () => get<{ items: RouteDto[] }>('/routes') });
+
+export const useRoute = (id: string | undefined) =>
+  useQuery({
+    queryKey: ['route', id],
+    queryFn: () => get<RouteDetailResponse>(`/routes/${id}`),
+    enabled: Boolean(id),
+  });
+
+export function useCreateRoute() {
+  const invalidate = useInvalidate(['routes', 'plans']);
+  return useMutation({
+    mutationFn: (body: { title: string; date: string; planIds: string[]; originText?: string | null }) =>
+      post<{ id: string }>('/routes', body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useResequenceRoute() {
+  const invalidate = useInvalidate(['routes', 'route']);
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      post<{ version: number; conflicts: number }>(`/routes/${id}/resequence`, { reason }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useManualReorder() {
+  const invalidate = useInvalidate(['routes', 'route']);
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string; stopIds: string[]; rationale: string; baseVersion: number }) =>
+      post<{ version: number }>(`/routes/${id}/reorder`, body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useConfirmRouteStop() {
+  const invalidate = useInvalidate(['routes', 'route']);
+  return useMutation({
+    mutationFn: ({ routeId, stopId, baseVersion }: { routeId: string; stopId: string; baseVersion: number }) =>
+      post<{ applied: boolean; stale: boolean; currentVersion: number }>(
+        `/routes/${routeId}/stops/${stopId}/confirm`,
+        { baseVersion },
+      ),
+    onSuccess: invalidate,
+    onError: invalidate,
+  });
+}
+
+export function useResolveRouteConflict() {
+  const invalidate = useInvalidate(['routes', 'route']);
+  return useMutation({
+    mutationFn: ({
+      routeId,
+      conflictId,
+      ...body
+    }: {
+      routeId: string;
+      conflictId: string;
+      resolution: string;
+      rationale: string;
+      stopId?: string;
+    }) => post<unknown>(`/routes/${routeId}/conflicts/${conflictId}/resolve`, body),
+    onSuccess: invalidate,
   });
 }

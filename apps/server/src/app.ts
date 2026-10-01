@@ -11,6 +11,7 @@ import { libraryRouter } from './routes/library.js';
 import { inspirationRouter } from './routes/inspirations.js';
 import { timingRouter } from './routes/timing.js';
 import { workflowRouter } from './routes/workflow.js';
+import { routeRouter } from './routes/routes.js';
 import { albumRouter } from './routes/albums.js';
 import { searchRouter } from './routes/search.js';
 import { shareRouter, publicShareRouter } from './routes/share.js';
@@ -37,6 +38,7 @@ export function createApp(): Express {
   app.use('/api', inspirationRouter);
   app.use('/api', timingRouter);
   app.use('/api', workflowRouter);
+  app.use('/api', routeRouter);
   app.use('/api', albumRouter);
   app.use('/api', searchRouter);
   app.use('/api', shareRouter);

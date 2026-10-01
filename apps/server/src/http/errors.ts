@@ -24,6 +24,13 @@ export const errors = {
   albumHasRequiredGaps: (n: number) =>
     new ApiError('ALBUM_HAS_REQUIRED_GAPS', 409, `存在 ${n} 条必需缺口，无法发布`),
   resultAlreadyFilled: () => new ApiError('RESULT_ALREADY_FILLED', 409, '该计划已回填，如需修改请使用修订接口'),
+  routeVersionStale: (details?: Record<string, unknown>) =>
+    new ApiError(
+      'ROUTE_VERSION_STALE',
+      409,
+      '路线顺序已更新，该操作来自旧版本，未覆盖当前顺序',
+      details,
+    ),
   geoOutOfRange: () => new ApiError('GEO_OUT_OF_RANGE', 422, '坐标越界或缺失'),
   shareExpired: () => new ApiError('SHARE_EXPIRED', 401, '分享链接已过期'),
   shareRevoked: () => new ApiError('SHARE_REVOKED', 401, '分享链接已撤销'),

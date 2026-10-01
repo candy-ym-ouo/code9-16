@@ -6,6 +6,7 @@ import {
   HitLevel,
   InspirationStatus,
   MissReason,
+  RouteConflictResolution,
   TagDomain,
   TimeAnchor,
   WeatherPhenomenon,
@@ -205,8 +206,46 @@ export const searchQuerySchema = z.object({
 
 export const offlineOpSchema = z.object({
   clientOpId: z.string().min(8).max(80),
-  opType: z.enum(['create_inspiration', 'tag', 'fill_result', 'note']),
+  opType: z.enum(['create_inspiration', 'tag', 'fill_result', 'note', 'confirm_route_stop']),
   payload: z.record(z.unknown()),
+});
+
+// ------------------------------------------------------------------ 取景路线
+
+export const createRouteSchema = z.object({
+  title: z.string().min(1).max(120),
+  /** 路线本地日期（与所含窗口的 date 一致，YYYY-MM-DD） */
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式应为 YYYY-MM-DD'),
+  planIds: z.array(z.string().min(1)).min(1).max(12),
+  originText: z.string().max(200).nullable().optional(),
+});
+
+/**
+ * 站点确认必须携带 baseVersion（客户端看到的路线版本）。
+ * 服务端版本更新时，晚到确认只记录、不覆盖当前顺序。
+ */
+export const confirmRouteStopSchema = z.object({
+  baseVersion: z.number().int().min(1),
+  confirmedAt: z.string().datetime().optional(),
+  clientOpId: z.string().min(8).max(80).optional(),
+});
+
+export const resequenceRouteSchema = z.object({
+  reason: z.string().max(300).nullable().optional(),
+});
+
+/** 人工调序：顺序 + 取舍依据缺一不可，且必须基于当前版本 */
+export const manualReorderRouteSchema = z.object({
+  stopIds: z.array(z.string().min(1)).min(1).max(12),
+  rationale: z.string().min(4).max(500),
+  baseVersion: z.number().int().min(1),
+});
+
+export const resolveRouteConflictSchema = z.object({
+  resolution: zEnum(RouteConflictResolution),
+  /** 人工取舍依据（必填，会永久留在冲突记录里） */
+  rationale: z.string().min(4).max(500),
+  stopId: z.string().min(1).optional(),
 });
 
 export { AssetRole };

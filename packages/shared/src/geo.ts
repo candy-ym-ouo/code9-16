@@ -108,6 +108,16 @@ export function distanceKm(a: LatLng, b: LatLng): number {
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
+/**
+ * 站间通勤估算（没有路网数据时的确定性估计，可复算）：
+ * 市区均速 28 km/h + 8 分钟停车/步行固定开销，最少 5 分钟。
+ * 只用于取景路线重排的可解释估算，不用于精确导航。
+ */
+export function estimateCommuteMin(km: number): number {
+  if (!Number.isFinite(km) || km <= 0) return 5;
+  return Math.max(5, Math.round((km / 28) * 60) + 8);
+}
+
 /** 距离区间文案：模糊坐标下不输出精确距离值（见 13.5） */
 export function distanceBand(km: number): string {
   const bands: [number, string][] = [

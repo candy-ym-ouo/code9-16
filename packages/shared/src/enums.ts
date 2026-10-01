@@ -250,3 +250,49 @@ export const ReminderActionKind = {
   none: 'none',
 } as const;
 export type ReminderActionKind = (typeof ReminderActionKind)[keyof typeof ReminderActionKind];
+
+export const RouteStatus = {
+  active: 'active',
+  done: 'done',
+  cancelled: 'cancelled',
+} as const;
+export type RouteStatus = (typeof RouteStatus)[keyof typeof RouteStatus];
+
+/** 路线版本触发源：每次重排都必须能回答"是谁、因为什么调的序" */
+export const RouteTrigger = {
+  create: 'create',
+  systemResequence: 'system_resequence',
+  manualReorder: 'manual_reorder',
+  weatherChange: 'weather_change',
+} as const;
+export type RouteTrigger = (typeof RouteTrigger)[keyof typeof RouteTrigger];
+
+export const ROUTE_TRIGGER_LABEL: Record<RouteTrigger, string> = {
+  create: '创建路线',
+  system_resequence: '系统重排',
+  manual_reorder: '人工调序',
+  weather_change: '气象变化',
+};
+
+export const RouteConflictKind = {
+  windowOverlap: 'window_overlap',
+  commuteInsufficient: 'commute_insufficient',
+  weatherTurnedBad: 'weather_turned_bad',
+  staleConfirmation: 'stale_confirmation',
+} as const;
+export type RouteConflictKind = (typeof RouteConflictKind)[keyof typeof RouteConflictKind];
+
+export const ROUTE_CONFLICT_KIND_LABEL: Record<RouteConflictKind, string> = {
+  window_overlap: '窗口时段重叠',
+  commute_insufficient: '通勤时间不足',
+  weather_turned_bad: '气象转差',
+  stale_confirmation: '离线晚到确认',
+};
+
+/** 冲突的人工取舍动作（都必须附带文字依据） */
+export const RouteConflictResolution = {
+  acceptCurrent: 'accept_current',
+  dropStop: 'drop_stop',
+  applyStaleConfirmation: 'apply_stale_confirmation',
+} as const;
+export type RouteConflictResolution = (typeof RouteConflictResolution)[keyof typeof RouteConflictResolution];

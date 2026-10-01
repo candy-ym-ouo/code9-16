@@ -10,6 +10,7 @@ import { ctxOf } from '../http/context.js';
 import { errors } from '../http/errors.js';
 import { createBackup, exportAll, listBackups, restoreBackup } from '../services/backup.js';
 import { addTags, createInspiration, requireInspiration } from '../services/inspirations.js';
+import { confirmRouteStop } from '../services/routes.js';
 import { subscribe } from '../services/events.js';
 import { recomputeHitRate } from '../services/calibration.js';
 import { toJson } from '../db.js';
@@ -187,6 +188,26 @@ opsRouter.post(
         recomputeHitRate(plan.inspiration_id as string);
       }
       result = { planId: payload.planId, applied: true };
+    } else if (input.opType === 'confirm_route_stop') {
+      /**
+       * 离线晚到的站点确认：走与在线确认完全相同的版本闸门。
+       * 版本落后时只记录 stale_confirmation 冲突，绝不覆盖当前顺序；
+       * 结果里带 applied/stale/currentVersion，客户端据此决定是否重新拉取。
+       */
+      const payload = z
+        .object({
+          routeId: z.string().min(1),
+          stopId: z.string().min(1),
+          baseVersion: z.number().int().min(1),
+          confirmedAt: z.string().datetime().optional(),
+        })
+        .parse(input.payload);
+      const r = confirmRouteStop(payload.routeId, payload.stopId, payload.baseVersion, {
+        libraryId: ctx.libraryId,
+        clientOpId: input.clientOpId,
+        confirmedAt: payload.confirmedAt,
+      });
+      result = { ...r };
     } else {
       const payload = z.object({ inspirationId: z.string().min(1), note: z.string().max(5000) }).parse(input.payload);
       requireInspiration(payload.inspirationId, ctx.libraryId);
