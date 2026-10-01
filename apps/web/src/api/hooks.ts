@@ -4,8 +4,10 @@ import type {
   AlbumGapDto,
   InspirationDto,
   PlanDto,
+  PendingRouteConfirmationDto,
   ReminderDto,
   ReproWindowDto,
+  RouteDto,
   SearchResult,
   SpotDto,
   TagDto,
@@ -325,5 +327,112 @@ export function useRevokeShare() {
   return useMutation({
     mutationFn: (id: string) => post<unknown>(`/share-links/${id}/revoke`, {}),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['shareLinks'] }),
+  });
+}
+
+// ------------------------------------------------------------- 取景路线
+
+export interface RoutePreview {
+  date: string;
+  stops: RouteDto['stops'];
+  conflicts: RouteDto['conflicts'];
+  dropped: RouteDto['dropped'];
+  totalCommuteMin: number;
+  totalDistanceKm: number;
+  hasBlockingConflict: boolean;
+  candidateCount: number;
+}
+
+export function useRoutes() {
+  return useQuery({ queryKey: ['routes'], queryFn: () => get<{ items: RouteDto[] }>('/routes') });
+}
+
+export function useRoute(id: string | undefined) {
+  return useQuery({
+    queryKey: ['route', id],
+    queryFn: () => get<{ item: RouteDto }>(`/routes/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function usePreviewRoute() {
+  return useMutation({ mutationFn: (body: unknown) => post<RoutePreview>('/routes/preview', body) });
+}
+
+export function useCreateRoute() {
+  const invalidate = useInvalidate(['routes']);
+  return useMutation({
+    mutationFn: (body: unknown) => post<{ id: string; version: number; item: RouteDto }>('/routes', body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRouteActions() {
+  const invalidate = useInvalidate(['route', 'routes', 'routes-pending', 'reminders']);
+  return {
+    reorder: useMutation({
+      mutationFn: ({ id, ...body }: { id: string; baseVersion: number; orderedInspirationIds: string[]; rationale: string }) =>
+        post<{ item: RouteDto }>(`/routes/${id}/reorder`, body),
+      onSuccess: invalidate,
+    }),
+    changeWindow: useMutation({
+      mutationFn: ({
+        id,
+        stopId,
+        ...body
+      }: {
+        id: string;
+        stopId: string;
+        baseVersion: number;
+        windowId: string;
+        rationale: string;
+      }) => post<{ item: RouteDto }>(`/routes/${id}/stops/${stopId}/window`, body),
+      onSuccess: invalidate,
+    }),
+    rescan: useMutation({
+      mutationFn: ({ id, baseVersion }: { id: string; baseVersion: number }) =>
+        post<{ changed: boolean; item: RouteDto }>(`/routes/${id}/rescan-weather`, { baseVersion }),
+      onSuccess: invalidate,
+    }),
+    acceptRescan: useMutation({
+      mutationFn: ({ id, basis }: { id: string; basis: string }) =>
+        post<{ item: RouteDto }>(`/routes/${id}/accept-rescan`, { basis }),
+      onSuccess: invalidate,
+    }),
+    arrive: useMutation({
+      mutationFn: ({ id, stopId, ...body }: { id: string; stopId: string; baseVersion?: number; clientOpId?: string }) =>
+        post<unknown>(`/routes/${id}/stops/${stopId}/arrive`, body),
+      onSuccess: invalidate,
+    }),
+    resolveConflict: useMutation({
+      mutationFn: ({
+        id,
+        conflictId,
+        ...body
+      }: {
+        id: string;
+        conflictId: string;
+        resolution: 'keep_auto' | 'keep_manual' | 'ignore';
+        basis: string;
+      }) => post<{ item: RouteDto }>(`/routes/${id}/conflicts/${conflictId}/resolve`, body),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+export function usePendingRouteConfirmations(routeId?: string) {
+  return useQuery({
+    queryKey: ['routes-pending', routeId],
+    queryFn: () =>
+      get<{ items: PendingRouteConfirmationDto[] }>(`/routes-pending${routeId ? `?routeId=${routeId}` : ''}`),
+  });
+}
+
+export function useResolvePendingRoute() {
+  const invalidate = useInvalidate(['routes-pending', 'route', 'routes', 'reminders']);
+  return useMutation({
+    mutationFn: ({ pendingId, ...body }: { pendingId: string; decision: 'apply' | 'discard'; basis: string }) =>
+      post<{ item: RouteDto }>(`/routes-pending/${pendingId}/resolve`, body),
+    onSuccess: invalidate,
   });
 }

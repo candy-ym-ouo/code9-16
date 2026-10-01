@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes as RouterRoutes, useLocation, useNavigate } from 'react-router-dom';
 import { Badge, Button, Layout, Menu, Space, Tag, Typography } from 'antd';
 import { get } from './api/client.js';
 import { useReminders } from './api/hooks.js';
@@ -14,6 +14,7 @@ import AlbumDetail from './routes/AlbumDetail.js';
 import Search from './routes/Search.js';
 import Places from './routes/Places.js';
 import Plans from './routes/Plans.js';
+import RoutesPage from './routes/Routes.js';
 import Settings from './routes/Settings.js';
 import ShareView from './routes/ShareView.js';
 
@@ -48,6 +49,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </Space>
       ),
     },
+    { key: '/routes', label: <Link to="/routes">路线</Link> },
     { key: '/albums', label: <Link to="/albums">画册</Link> },
     { key: '/places', label: <Link to="/places">地点</Link> },
     { key: '/settings', label: <Link to="/settings">设置</Link> },
@@ -94,29 +96,30 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <Routes>
+    <RouterRoutes>
       <Route path="/login" element={<Login />} />
       <Route path="/share/:token" element={<ShareView />} />
       <Route
         path="*"
         element={
           <Shell>
-            <Routes>
+            <RouterRoutes>
               <Route path="/" element={<Today />} />
               <Route path="/inbox" element={<Inbox />} />
               <Route path="/inspirations" element={<Inspirations />} />
               <Route path="/inspirations/:id" element={<InspirationDetail />} />
               <Route path="/search" element={<Search />} />
               <Route path="/plans" element={<Plans />} />
+              <Route path="/routes" element={<RoutesPage />} />
               <Route path="/albums" element={<Albums />} />
               <Route path="/albums/:id" element={<AlbumDetail />} />
               <Route path="/places" element={<Places />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            </RouterRoutes>
           </Shell>
         }
       />
-    </Routes>
+    </RouterRoutes>
   );
 }

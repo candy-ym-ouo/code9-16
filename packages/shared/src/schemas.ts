@@ -209,4 +209,63 @@ export const offlineOpSchema = z.object({
   payload: z.record(z.unknown()),
 });
 
+// ------------------------------------------------------------- 取景路线
+
+export const previewRouteSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式应为 YYYY-MM-DD'),
+  /** 参与规划的灵感卡；为空则取该库未来全部 good/marginal 窗口 */
+  inspirationIds: z.array(z.string().min(1)).default([]),
+  origin: latLngSchema.nullable().optional(),
+  /** 最早可出发时刻（ISO）。不给则首段不约束；给了才能判"清晨窗口从家赶不到" */
+  earliestDepartAt: z.string().datetime({ offset: true }).nullable().optional(),
+  speedKmh: z.number().min(1).max(300).default(25),
+  slackMin: z.number().int().min(0).max(240).default(0),
+  initialBufferMin: z.number().int().min(0).max(240).default(0),
+  /** 只纳入不低于该判定的窗口 */
+  minVerdict: z.enum(['good', 'marginal', 'bad']).default('marginal'),
+});
+
+export const createRouteSchema = previewRouteSchema.extend({
+  title: z.string().min(1).max(120),
+});
+
+/** 人工改序：明确给出顺序。服务端不自动纠正，只校验并把冲突留痕，要求取舍依据 */
+export const reorderRouteSchema = z.object({
+  /** 客户端持有的版本号；与服务端不一致 → 409，离线晚到确认不得覆盖新顺序 */
+  baseVersion: z.number().int().min(0),
+  orderedInspirationIds: z.array(z.string().min(1)).min(1),
+  /** 人工改序必须写明取舍依据（为什么宁可赶一点也要这么排） */
+  rationale: z.string().min(1).max(500),
+});
+
+/** 换窗：把某停靠换到它的备选窗口 */
+export const changeStopWindowSchema = z.object({
+  baseVersion: z.number().int().min(0),
+  stopId: z.string().min(1),
+  windowId: z.string().min(1),
+  rationale: z.string().min(1).max(500),
+});
+
+export const arriveStopSchema = z.object({
+  clientOpId: z.string().min(8).max(80).optional(),
+  baseVersion: z.number().int().min(0).optional(),
+  arrivedAt: z.string().datetime({ offset: true }).optional(),
+  late: z.boolean().optional(),
+});
+
+export const resolveRouteConflictSchema = z.object({
+  resolution: z.enum(['keep_auto', 'keep_manual', 'ignore']),
+  basis: z.string().min(1).max(500),
+});
+
+export const resolvePendingConfirmationSchema = z.object({
+  decision: z.enum(['apply', 'discard']),
+  /** apply 时把确认作用到当前最新顺序；discard 仅需说明 */
+  basis: z.string().min(1).max(500),
+});
+
+export const rescanRouteWeatherSchema = z.object({
+  baseVersion: z.number().int().min(0),
+});
+
 export { AssetRole };

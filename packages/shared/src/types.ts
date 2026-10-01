@@ -235,3 +235,82 @@ export interface AuthUser {
   libraryId: string;
   role: 'owner' | 'member';
 }
+
+// ------------------------------------------------------------- 取景路线
+
+export interface RouteConflictDto {
+  id: string | null;
+  kind: import('./enums.js').RouteConflictKind;
+  source: import('./enums.js').RouteConflictSource;
+  status: import('./enums.js').RouteConflictStatus;
+  fromInspirationId: string | null;
+  toInspirationId: string;
+  message: string;
+  evidence: Record<string, unknown>;
+  windowIds: string[];
+  resolutionBasis: string | null;
+  resolvedBy: string | null;
+  createdAt: string | null;
+}
+
+export interface RouteStopDto {
+  id: string;
+  seq: number;
+  inspirationId: string;
+  inspirationTitle: string;
+  spotId: string;
+  windowId: string | null;
+  date: string;
+  startAt: string;
+  endAt: string;
+  verdict: WindowVerdict;
+  status: import('./enums.js').RouteStopStatus;
+  leg: {
+    fromInspirationId: string | null;
+    distanceKm: number;
+    commuteMin: number;
+    departAt: string | null;
+    arriveAt: string | null;
+    feasible: boolean;
+  };
+  alternateOptionWindowIds: string[];
+  arrivedAt: string | null;
+}
+
+export interface RouteDto {
+  id: string;
+  title: string;
+  date: string;
+  status: import('./enums.js').RouteStatus;
+  version: number;
+  origin: { lat: number; lng: number } | null;
+  earliestDepartAt: string | null;
+  speedKmh: number;
+  slackMin: number;
+  initialBufferMin: number;
+  weatherDegraded: boolean;
+  needsReview: boolean;
+  totalCommuteMin: number;
+  totalDistanceKm: number;
+  hasBlockingConflict: boolean;
+  stops: RouteStopDto[];
+  conflicts: RouteConflictDto[];
+  dropped: { inspirationId: string; title: string; reason: string; evidence: Record<string, unknown> }[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 离线晚到确认：被服务端拦下后挂起，等人取舍 */
+export interface PendingRouteConfirmationDto {
+  id: string;
+  routeId: string;
+  clientOpId: string;
+  stopId: string | null;
+  inspirationId: string | null;
+  action: 'arrive' | 'reorder';
+  payload: Record<string, unknown>;
+  baseVersion: number;
+  currentVersion: number;
+  reason: string;
+  createdAt: string;
+}

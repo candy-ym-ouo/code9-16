@@ -15,6 +15,7 @@ import { albumRouter } from './routes/albums.js';
 import { searchRouter } from './routes/search.js';
 import { shareRouter, publicShareRouter } from './routes/share.js';
 import { opsRouter } from './routes/ops.js';
+import { routeRouter } from './routes/routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -39,6 +40,7 @@ export function createApp(): Express {
   app.use('/api', workflowRouter);
   app.use('/api', albumRouter);
   app.use('/api', searchRouter);
+  app.use('/api', routeRouter);
   app.use('/api', shareRouter);
 
   app.use('/api', (_req, res) => {

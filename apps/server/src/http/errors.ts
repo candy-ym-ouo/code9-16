@@ -24,6 +24,12 @@ export const errors = {
   albumHasRequiredGaps: (n: number) =>
     new ApiError('ALBUM_HAS_REQUIRED_GAPS', 409, `存在 ${n} 条必需缺口，无法发布`),
   resultAlreadyFilled: () => new ApiError('RESULT_ALREADY_FILLED', 409, '该计划已回填，如需修改请使用修订接口'),
+  routeVersionConflict: (currentVersion: number, detail?: string) =>
+    new ApiError('ROUTE_VERSION_CONFLICT', 409, detail ?? '路线已被重新排序，离线晚到确认不会覆盖新顺序，请基于最新顺序取舍', {
+      currentVersion,
+    }),
+  routeConflictOpen: (n: number) =>
+    new ApiError('ROUTE_CONFLICT_OPEN', 409, `存在 ${n} 处时段冲突待人工取舍，请先处理再执行`),
   geoOutOfRange: () => new ApiError('GEO_OUT_OF_RANGE', 422, '坐标越界或缺失'),
   shareExpired: () => new ApiError('SHARE_EXPIRED', 401, '分享链接已过期'),
   shareRevoked: () => new ApiError('SHARE_REVOKED', 401, '分享链接已撤销'),

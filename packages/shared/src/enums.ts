@@ -243,6 +243,7 @@ export const ReminderActionKind = {
   fillTiming: 'fill_timing',
   openPlan: 'open_plan',
   resolveWeatherChange: 'resolve_weather_change',
+  resolveRouteConflict: 'resolve_route_conflict',
   fillResult: 'fill_result',
   fillAlbumGap: 'fill_album_gap',
   renewShare: 'renew_share',
@@ -250,3 +251,57 @@ export const ReminderActionKind = {
   none: 'none',
 } as const;
 export type ReminderActionKind = (typeof ReminderActionKind)[keyof typeof ReminderActionKind];
+
+// --------------------------------------------------------------- 取景路线
+
+export const RouteStatus = {
+  draft: 'draft',
+  active: 'active',
+  completed: 'completed',
+  archived: 'archived',
+} as const;
+export type RouteStatus = (typeof RouteStatus)[keyof typeof RouteStatus];
+
+export const RouteStopStatus = {
+  planned: 'planned',
+  arrived: 'arrived',
+  late: 'late',
+  skipped: 'skipped',
+} as const;
+export type RouteStopStatus = (typeof RouteStopStatus)[keyof typeof RouteStopStatus];
+
+/** 冲突类型：时段重叠 / 通勤不可达（赶不到）/ 气象降级换窗 / 人工改序 */
+export const RouteConflictKind = {
+  overlap: 'overlap',
+  commuteUnreachable: 'commute_unreachable',
+  weatherShift: 'weather_shift',
+  manualReorder: 'manual_reorder',
+  offlineStale: 'offline_stale',
+} as const;
+export type RouteConflictKind = (typeof RouteConflictKind)[keyof typeof RouteConflictKind];
+
+export const ROUTE_CONFLICT_KIND_LABEL: Record<RouteConflictKind, string> = {
+  overlap: '时段重叠',
+  commute_unreachable: '通勤赶不到',
+  weather_shift: '气象变化换窗',
+  manual_reorder: '人工改序',
+  offline_stale: '离线晚到确认过期',
+};
+
+export const RouteConflictStatus = {
+  open: 'open',
+  keptAuto: 'kept_auto',
+  keptManual: 'kept_manual',
+  resolved: 'resolved',
+  ignored: 'ignored',
+} as const;
+export type RouteConflictStatus = (typeof RouteConflictStatus)[keyof typeof RouteConflictStatus];
+
+/** 冲突来源：谁/什么触发的，决定取舍时必须可追溯 */
+export const RouteConflictSource = {
+  autoPlan: 'auto_plan',
+  weatherRescan: 'weather_rescan',
+  manual: 'manual',
+  offline: 'offline',
+} as const;
+export type RouteConflictSource = (typeof RouteConflictSource)[keyof typeof RouteConflictSource];
